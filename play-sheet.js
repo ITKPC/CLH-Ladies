@@ -54,6 +54,7 @@
   window.printPlaySheet = id => {
     const e = state.events.find(x => x.id === id);
     if (!e) return;
+
     const roster = numberedRoster(e);
     const rosterRows = roster.map(p => `<tr><td>${p.number}</td><td>${esc(p.name)}</td></tr>`).join('');
     const waitRows = e.waitlist.length ? `<div class="wait-print"><h3>Waitlist</h3>${e.waitlist.map((p,i)=>`<div>${i+1}. ${esc(p)}</div>`).join('')}</div>` : '';
@@ -65,10 +66,8 @@
       ? 'Use player numbers when recording teams, matchups and scores.'
       : 'Use player numbers for court assignments or casual rotations.';
 
-    const w = window.open('', '_blank', 'noopener,noreferrer');
-    if (!w) return toast('Allow pop-ups to create the PDF.');
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(e.name)} - Play Sheet</title><style>
-      body{font-family:Arial,sans-serif;color:#17324d;margin:32px;line-height:1.35}h1{margin:0 0 6px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}.meta{color:#536a75;margin-bottom:4px}.format{font-weight:700;margin:12px 0;padding:8px 10px;background:#eef7f8;border-radius:8px;display:inline-block}table{border-collapse:collapse;width:100%;max-width:520px;margin-top:12px}th,td{border-bottom:1px solid #dbe6e9;padding:9px 8px;text-align:left}th:first-child,td:first-child{width:70px;text-align:center;font-weight:700}.instructions{margin-top:22px;padding:12px;border:1px solid #dbe6e9;border-radius:10px}.line{border-bottom:1px solid #999;height:28px;margin-top:8px}.wait-print{margin-top:26px}.print-actions{margin:24px 0}.print-actions button{padding:10px 14px;font-size:15px}@media print{.print-actions{display:none}body{margin:14mm}}
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(e.name)} - Play Sheet</title><style>
+      *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17324d;margin:32px;line-height:1.35;background:#fff}h1{margin:0 0 6px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}.meta{color:#536a75;margin-bottom:4px}.format{font-weight:700;margin:12px 0;padding:8px 10px;background:#eef7f8;border-radius:8px;display:inline-block}table{border-collapse:collapse;width:100%;max-width:520px;margin-top:12px}th,td{border-bottom:1px solid #dbe6e9;padding:9px 8px;text-align:left}th:first-child,td:first-child{width:70px;text-align:center;font-weight:700}.instructions{margin-top:22px;padding:12px;border:1px solid #dbe6e9;border-radius:10px}.line{border-bottom:1px solid #999;height:28px;margin-top:8px}.wait-print{margin-top:26px}.print-actions{margin:24px 0}.print-actions button{padding:12px 16px;font-size:16px;border:0;border-radius:8px;background:#087ca1;color:white;font-weight:700}@media print{.print-actions{display:none}body{margin:14mm}}@media(max-width:560px){body{margin:18px}h1{font-size:22px}}
     </style></head><body>
       <h1>${esc(e.name)}</h1>
       <div class="meta">${fmtDate(e.date,{weekday:'long',month:'long',day:'numeric'})}</div>
@@ -79,10 +78,17 @@
       <table><thead><tr><th>#</th><th>Player</th></tr></thead><tbody>${rosterRows || '<tr><td colspan="2">No confirmed players</td></tr>'}</tbody></table>
       ${waitRows}
       <div class="instructions"><strong>Play setup</strong><p>${hint}</p><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
-      <div class="print-actions"><button onclick="window.print()">Print / Save as PDF</button></div>
-    </body></html>`);
-    w.document.close();
-    w.focus();
+      <div class="print-actions"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>
+    </body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const opened = window.open(url, '_blank');
+    if (!opened) {
+      URL.revokeObjectURL(url);
+      return toast('Allow pop-ups to create the play sheet.');
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
 
   function makeCardsClickable() {
