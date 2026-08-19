@@ -25,14 +25,16 @@
     const client = currentClient();
     if (!client || !currentUser()) return;
 
-    const [{data:sessions,error:sessionError},{data:participants,error:participantError},{data:profiles,error:profileError}] = await Promise.all([
+    const [{data:sessions,error:sessionError},{data:participants,error:participantError},{data:profiles,error:profileError},{data:guests,error:guestError}] = await Promise.all([
       client.from('play_sessions').select('id,title,starts_at,ends_at,format,level,courts,capacity,note,created_by,cancelled_at').is('cancelled_at',null).order('starts_at'),
       client.from('session_participants').select('session_id,user_id,status,joined_at').in('status',['confirmed','waitlist']).order('joined_at'),
-      client.from('profiles').select('id,display_name')
+      client.from('profiles').select('id,display_name'),
+      client.from('session_guest_players').select('session_id,display_name,is_demo,created_at').order('created_at')
     ]);
     if (sessionError) throw sessionError;
     if (participantError) throw participantError;
     if (profileError) throw profileError;
+    if (guestError) throw guestError;
 
     const names = new Map((profiles||[]).map(p=>[p.id,p.display_name||'Player']));
     const grouped = new Map();
@@ -41,6 +43,10 @@
       const target = grouped.get(p.session_id);
       const item = {name:names.get(p.user_id)||'Player', joined_at:p.joined_at, user_id:p.user_id};
       if (p.status==='confirmed') target.confirmed.push(item); else target.waitlist.push(item);
+    });
+    (guests||[]).forEach(g=>{
+      if (!grouped.has(g.session_id)) grouped.set(g.session_id,{confirmed:[],waitlist:[]});
+      grouped.get(g.session_id).confirmed.push({name:g.display_name,joined_at:g.created_at,user_id:null,isDemo:g.is_demo});
     });
 
     state.events = (sessions||[]).map(s=>{
