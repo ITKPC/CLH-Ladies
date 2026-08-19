@@ -10,12 +10,20 @@
     return `${get('year')}-${get('month')}-${get('day')}`;
   }
 
+  function appEvents() {
+    try {
+      return typeof state !== 'undefined' && Array.isArray(state?.events) ? state.events : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
   function renderAllUpcoming() {
     const root = document.getElementById('upcoming');
-    if (!root || !window.state) return;
+    if (!root) return;
 
     const today = clubToday();
-    const events = (state.events || [])
+    const events = appEvents()
       .filter(e => {
         if (!e || !e.date) return false;
         if (typeof e.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(e.id)) return false;
@@ -52,6 +60,8 @@
   document.addEventListener('click', event => {
     const tab = event.target.closest('.nav [data-view="upcomingView"]');
     if (!tab) return;
+    // Remove any stale prototype cards immediately, then refresh from Supabase.
+    renderAllUpcoming();
     setTimeout(refreshAndRender, 0);
   }, true);
 
