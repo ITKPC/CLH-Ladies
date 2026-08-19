@@ -34,7 +34,12 @@
   window.showRoster = id => {
     const e = state.events.find(x => x.id === id);
     if (!e) return;
-    const mine = same(e.host, profile);
+    const mine = !!(e.createdBy && e.createdBy === window.clhAuthUser?.id);
+    const isMatch = /^Who['’]s Game\? Match$/i.test(e.name || '');
+    const cancelLabel = isMatch ? 'Cancel Match' : 'Cancel Session';
+    const ownerHelp = isMatch
+      ? 'You made this match. Cancelling it removes it from Upcoming for everyone.'
+      : 'You can change courts, capacity, time or notes if plans change.';
     $('modalBody').innerHTML = `
       <h2>${esc(e.name)}</h2>
       <p><strong>${fmtDate(e.date,{weekday:'long',month:'long',day:'numeric'})}</strong><br>${fmtTime(e.start)}–${fmtTime(e.end)} · Courts ${esc(e.courts)}</p>
@@ -46,7 +51,7 @@
       <div class="roster">${numberedRosterHtml(e)}</div>
       ${waitlistHtml(e)}
       ${sessionToolsHtml(e, mine)}
-      ${mine ? `<div class="cancelbox"><strong>You started this session.</strong><p class="small">You can change courts, capacity, time or notes if plans change.</p><div class="actions"><button class="danger" onclick="askCancel('${e.id}')">Cancel Session</button></div></div>` : ''}
+      ${mine ? `<div class="cancelbox"><strong>You started this ${isMatch ? 'match' : 'session'}.</strong><p class="small">${ownerHelp}</p><div class="actions"><button class="danger" onclick="askCancel('${e.id}')">${cancelLabel}</button></div></div>` : ''}
     `;
     $('modal').classList.add('open');
   };
