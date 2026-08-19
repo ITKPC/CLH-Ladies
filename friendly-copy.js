@@ -1,6 +1,7 @@
 /* Friendly, current copy and branding for the shared Supabase app. */
 (() => {
   const LOGO = 'assets/Mexican_Pickleball_Logo.png';
+  let matchCreatePending = false;
 
   const updateUi = () => {
     document.querySelectorAll('.brand img, .access-mark').forEach(img => {
@@ -27,9 +28,24 @@
         box.textContent = 'No games here yet. Tap + Play and get one going!';
       }
     });
+
+    if (matchCreatePending) {
+      const toast = document.getElementById('toast');
+      const message = (toast?.textContent || '').trim();
+      if (toast?.classList.contains('show') && /^Game made/i.test(message)) {
+        matchCreatePending = false;
+        requestAnimationFrame(() => window.clhShowView?.('upcomingView'));
+      } else if (toast?.classList.contains('show') && /(Pick at least|Pick a court|Could not make|court was just taken)/i.test(message)) {
+        matchCreatePending = false;
+      }
+    }
   };
+
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-make-game]')) matchCreatePending = true;
+  }, true);
 
   updateUi();
   const observer = new MutationObserver(() => requestAnimationFrame(updateUi));
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 })();
