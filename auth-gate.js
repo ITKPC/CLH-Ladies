@@ -1,6 +1,5 @@
 /* Shared group passkey gate + Supabase anonymous identity. */
 (() => {
-  const ACCESS_TOKEN = 'clh-group-access-v1';
   const PROFILE = 'clh-ladies-profile';
   let client;
 
@@ -19,7 +18,6 @@
       .access-card button{width:100%;margin-top:16px;border:0;border-radius:11px;padding:12px;background:#087ca1;color:white;font-weight:900;font:inherit;cursor:pointer}
       .access-card button:disabled{opacity:.55;cursor:wait}
       .access-error{min-height:20px;margin-top:10px;color:#9b3030;font-size:.82rem;text-align:center;font-weight:700}
-      .access-loading{text-align:center;color:white;font-weight:800}
     `;
     document.head.appendChild(style);
   }
@@ -40,66 +38,63 @@
     </div>`;
   }
 
-  async function verifyWithServer(payload) {
-    const response = await fetch('/.netlify/functions/group-access', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
-      body: JSON.stringify(payload)
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || 'Could not verify group access.');
-    return data;
-  }
-
-  async function ensureSupabaseIdentity(name) {
+  function getClient() {
     if (!window.createClhSupabaseClient) throw new Error('Supabase is not ready.');
     client = client || window.createClhSupabaseClient();
-
-    const { data: sessionData, error: sessionError } = await client.auth.getSession();
-    if (sessionError) throw sessionError;
-
-    let user = sessionData.session?.user;
-    if (!user) {
-      const { data, error } = await client.auth.signInAnonymously({
-        options: { data: { display_name: name } }
-      });
-      if (error) throw error;
-      user = data.user;
-    }
-
-    if (user?.id) {
-      await client.from('profiles').update({ display_name: name }).eq('id', user.id);
-    }
-
-    window.clhSupabase = client;
-    window.clhAuthUser = user;
+    return client;
   }
 
-  async function unlock(name) {
+  async function ensureAnonymousIdentity(name) {
+    const supabase = getClient();
+    const { data: current, error: currentError } = await supabase.auth.getSession();
+    if (currentError) throw currentError;
+    if (current.session?.user) return current.session.user;
+
+    const { data, error } = await supabase.auth.signInAnonymously({
+      options: { data: { display_name: name } }
+    });
+    if (error) throw error;
+    return data.user;
+  }
+
+  async function approveDevice(name, passkey) {
+    const supabase = getClient();
+    await ensureAnonymousIdentity(name);
+    const { data, error } = await supabase.functions.invoke('group-access', {
+      body: { name, passkey }
+    });
+    if (error) throw new Error(data?.error || error.message || 'Could not verify group access.');
+    if (!data?.ok) throw new Error(data?.error || 'Could not verify group access.');
+
+    // Refresh so the newly approved group membership is present in the JWT.
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) throw refreshError;
+    return refreshed.user || refreshed.session?.user;
+  }
+
+  async function unlock(name, user) {
     localStorage.setItem(PROFILE, name);
-    await ensureSupabaseIdentity(name);
+    window.clhSupabase = getClient();
+    window.clhAuthUser = user;
     document.body.classList.remove('clh-locked');
     document.getElementById('accessGate')?.remove();
 
-    // Keep the existing interface in sync until its data layer is moved to Supabase.
     if (typeof profile !== 'undefined') {
       profile = name;
       if (typeof renderAll === 'function') renderAll();
     }
+    window.dispatchEvent(new CustomEvent('clh-auth-ready', { detail: { user, name } }));
   }
 
   async function tryRememberedAccess() {
-    const token = localStorage.getItem(ACCESS_TOKEN);
-    if (!token) return false;
-    try {
-      const result = await verifyWithServer({ token });
-      await unlock(result.name || localStorage.getItem(PROFILE) || 'Player');
-      return true;
-    } catch {
-      localStorage.removeItem(ACCESS_TOKEN);
-      return false;
-    }
+    const supabase = getClient();
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.user) return false;
+    const user = data.session.user;
+    if (user.app_metadata?.group_approved !== true) return false;
+    const name = localStorage.getItem(PROFILE) || user.user_metadata?.display_name || 'Player';
+    await unlock(name, user);
+    return true;
   }
 
   function showGate() {
@@ -114,14 +109,17 @@
       const name = document.getElementById('accessName').value.trim();
       const passkey = document.getElementById('accessPasskey').value;
       errorBox.textContent = '';
+      if (!name) { errorBox.textContent = 'Enter your name.'; return; }
       button.disabled = true;
       button.textContent = 'Checking…';
       try {
-        const result = await verifyWithServer({ name, passkey });
-        localStorage.setItem(ACCESS_TOKEN, result.token);
-        await unlock(result.name);
+        const user = await approveDevice(name, passkey);
+        await unlock(name, user);
       } catch (error) {
-        errorBox.textContent = error.message || 'Could not enter the app.';
+        const message = error?.message || 'Could not enter the app.';
+        errorBox.textContent = /anonymous/i.test(message)
+          ? 'Anonymous sign-in needs to be enabled in the Supabase project.'
+          : message;
         button.disabled = false;
         button.textContent = 'Enter';
       }
@@ -136,13 +134,14 @@
   async function start() {
     addStyles();
     document.body.classList.add('clh-locked');
-    const remembered = await tryRememberedAccess();
-    if (!remembered) showGate();
+    try {
+      if (await tryRememberedAccess()) return;
+    } catch (error) {
+      console.warn('Remembered group access could not be restored', error);
+    }
+    showGate();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
-  } else {
-    start();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
 })();
