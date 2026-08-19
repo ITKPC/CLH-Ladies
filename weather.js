@@ -147,6 +147,7 @@
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
       await loadScript('supabase-client.js');
       await loadScript('auth-gate.js');
+      await loadScript('navigation-fix.js');
       await loadScript('play-sheet.js');
       await loadScript('shared-data.js');
       await loadScript('court-picker.js');
