@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Club La Huerta Ladies Pickleball</title>
+  <meta name="description" content="Session organizer for the Club La Huerta Ladies Pickleball Group." />
+  <style>
+    :root {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #17324d;
+      background: #f7fbfd;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    header {
+      padding: 28px 20px 18px;
+      background: linear-gradient(135deg, #01aef0, #8ec753);
+      color: white;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 5vw, 2.7rem); }
+    p { line-height: 1.5; }
+    main { padding: 24px 20px 48px; }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 30px rgba(23, 50, 77, 0.08);
+      margin-bottom: 18px;
+    }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    button, select, input, textarea {
+      width: 100%;
+      font: inherit;
+      border-radius: 12px;
+      border: 1px solid #c9d8e4;
+      padding: 12px 14px;
+    }
+    button {
+      border: 0;
+      background: #01aef0;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary { background: #8ec753; }
+    button.ghost { background: #eef7fb; color: #17324d; }
+    label { display: block; font-weight: 700; margin: 14px 0 6px; }
+    .hidden { display: none; }
+    .muted { color: #61778a; font-size: 0.95rem; }
+    .court {
+      border: 1px solid #dbe7ef;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .court h3 { margin: 0 0 8px; }
+    .pill {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #eef7fb;
+      margin: 3px 4px 3px 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Club La Huerta Ladies Pickleball</h1>
+      <p>Simple courtside session setup for ladders, round robins, and league-style play.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" id="setupCard">
+      <h2>Start a session</h2>
+      <p class="muted">Session information stays in this browser only. No player database is used.</p>
+
+      <label for="format">Play format</label>
+      <select id="format">
+        <option value="round-robin">Round Robin</option>
+        <option value="ladder">Ladder</option>
+        <option value="league">League</option>
+      </select>
+
+      <label for="courts">Number of courts</label>
+      <input id="courts" type="number" min="1" max="20" value="3" />
+
+      <label for="players">Players</label>
+      <textarea id="players" rows="9" placeholder="One player per line\nMaria\nSusan\nLinda\nPatricia"></textarea>
+
+      <div class="grid" style="margin-top:16px">
+        <button id="generateBtn">Generate courts</button>
+        <button class="ghost" id="clearBtn" type="button">Clear session</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="sessionCard">
+      <h2 id="sessionTitle">Current session</h2>
+      <div id="courtList"></div>
+      <div class="grid" style="margin-top:16px">
+        <button class="secondary" id="nextRoundBtn">Generate next round</button>
+        <button class="ghost" id="editBtn">Edit players</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const stateKey = 'clh-ladies-session';
+    const setupCard = document.getElementById('setupCard');
+    const sessionCard = document.getElementById('sessionCard');
+    const playersInput = document.getElementById('players');
+    const formatInput = document.getElementById('format');
+    const courtsInput = document.getElementById('courts');
+    const courtList = document.getElementById('courtList');
+    const sessionTitle = document.getElementById('sessionTitle');
+
+    function readPlayers() {
+      return playersInput.value.split('\n').map(v => v.trim()).filter(Boolean);
+    }
+
+    function shuffle(items) {
+      const a = [...items];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function buildCourts(players, courtCount) {
+      const shuffled = shuffle(players);
+      const activeCourts = Math.min(courtCount, Math.max(1, Math.ceil(shuffled.length / 4)));
+      const groups = Array.from({ length: activeCourts }, () => []);
+      shuffled.forEach((player, index) => groups[index % activeCourts].push(player));
+      return groups;
+    }
+
+    function render(state) {
+      const names = { 'round-robin': 'Round Robin', ladder: 'Ladder', league: 'League' };
+      sessionTitle.textContent = `${names[state.format]} · Round ${state.round}`;
+      courtList.innerHTML = '';
+      state.groups.forEach((group, index) => {
+        const div = document.createElement('div');
+        div.className = 'court';
+        div.innerHTML = `<h3>Court ${index + 1}</h3>${group.map(p => `<span class="pill">${escapeHtml(p)}</span>`).join('')}`;
+        courtList.appendChild(div);
+      });
+      setupCard.classList.add('hidden');
+      sessionCard.classList.remove('hidden');
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    }
+
+    function save(state) {
+      sessionStorage.setItem(stateKey, JSON.stringify(state));
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const players = readPlayers();
+      if (players.length < 2) {
+        alert('Enter at least two players.');
+        return;
+      }
+      const state = {
+        format: formatInput.value,
+        courts: Number(courtsInput.value) || 1,
+        players,
+        round: 1,
+        groups: buildCourts(players, Number(courtsInput.value) || 1)
+      };
+      save(state);
+      render(state);
+    });
+
+    document.getElementById('nextRoundBtn').addEventListener('click', () => {
+      const state = JSON.parse(sessionStorage.getItem(stateKey) || 'null');
+      if (!state) return;
+      state.round += 1;
+      state.groups = buildCourts(state.players, state.courts);
+      save(state);
+      render(state);
+    });
+
+    document.getElementById('editBtn').addEventListener('click', () => {
+      setupCard.classList.remove('hidden');
+      sessionCard.classList.add('hidden');
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      sessionStorage.removeItem(stateKey);
+      playersInput.value = '';
+      sessionCard.classList.add('hidden');
+      setupCard.classList.remove('hidden');
+    });
+
+    const saved = JSON.parse(sessionStorage.getItem(stateKey) || 'null');
+    if (saved) {
+      playersInput.value = saved.players.join('\n');
+      formatInput.value = saved.format;
+      courtsInput.value = saved.courts;
+      render(saved);
+    }
+  </script>
+</body>
+</html>
