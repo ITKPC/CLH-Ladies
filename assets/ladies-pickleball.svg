@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Four older women enjoying pickleball in Cabo">
+  <defs>
+    <clipPath id="circle"><circle cx="300" cy="300" r="292"/></clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#9be7f5"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#0ea5c6"/><stop offset="1" stop-color="#087ca1"/></linearGradient>
+  </defs>
+  <g clip-path="url(#circle)">
+    <rect width="600" height="600" fill="url(#sky)"/>
+    <circle cx="470" cy="105" r="52" fill="#ffd84d"/>
+    <path d="M0 250h600v350H0z" fill="url(#sea)"/>
+    <path d="M205 245l70-110 45 110zM295 245l72-138 61 138z" fill="#d8a36e"/>
+    <path d="M226 245l48-74 25 74zM330 245l36-82 36 82z" fill="#f2c89a"/>
+    <path d="M0 350c90-45 170-42 250-5s170 46 350-8v263H0z" fill="#f7e4bd"/>
+    <path d="M44 316c10-93 19-148 40-199 12 64 11 126 6 199z" fill="#2e8b57"/><path d="M36 110c70 12 94 26 130 62-50-7-90-9-128 11 27-42 60-61 103-78-46-3-74-2-105 5z" fill="#3fa75d"/>
+    <path d="M505 319c-8-82-4-142 19-203 12 73 14 127 8 203z" fill="#2e8b57"/><path d="M463 127c69 3 98 17 128 45-55 0-83 8-116 30 18-36 45-59 79-78-38-2-64-1-91 3z" fill="#3fa75d"/>
+    <g fill="#df3c8e"><circle cx="68" cy="386" r="24"/><circle cx="96" cy="370" r="20"/><circle cx="520" cy="390" r="25"/><circle cx="548" cy="369" r="19"/></g>
+    <g stroke="#17324d" stroke-width="8" stroke-linejoin="round">
+      <path d="M76 266l64-44 36 53-67 43z" fill="#0b6f8f"/><path d="M100 307l-33 65" fill="none" stroke-linecap="round"/>
+      <path d="M470 250l66-36 31 58-66 36z" fill="#ea4b94"/><path d="M497 296l-19 73" fill="none" stroke-linecap="round"/>
+    </g>
+    <g stroke="#17324d" stroke-width="5">
+      <g transform="translate(72 230)"><ellipse cx="78" cy="118" rx="66" ry="74" fill="#f2b38a"/><path d="M19 106c0-89 121-117 132-18-35-26-90-33-132 18z" fill="#e7ded0"/><path d="M31 55c35-35 86-44 113-4" fill="none"/><path d="M36 98c23-15 55-15 81 0" fill="none"/><ellipse cx="52" cy="108" rx="18" ry="12" fill="#17324d"/><ellipse cx="105" cy="108" rx="18" ry="12" fill="#17324d"/><path d="M67 145q17 18 34 0" fill="none" stroke="#b83961" stroke-width="7"/><path d="M0 260q80-55 160 0v120H0z" fill="#16a6c9"/></g>
+      <g transform="translate(190 258)"><ellipse cx="78" cy="118" rx="66" ry="74" fill="#e7aa7d"/><path d="M11 108c-3-94 129-121 139-8-39-34-98-31-139 8z" fill="#7d563e"/><path d="M23 65c38-33 88-35 120 1" fill="none"/><ellipse cx="51" cy="109" rx="18" ry="12" fill="#17324d"/><ellipse cx="104" cy="109" rx="18" ry="12" fill="#17324d"/><path d="M66 146q18 18 36 0" fill="none" stroke="#b83961" stroke-width="7"/><path d="M0 260q80-55 160 0v120H0z" fill="#f0549c"/></g>
+      <g transform="translate(315 258)"><ellipse cx="78" cy="118" rx="66" ry="74" fill="#efb88e"/><path d="M10 110c4-97 125-126 140-7-42-31-98-32-140 7z" fill="#d7d3ca"/><path d="M32 56c31-27 86-33 113 2" fill="none"/><ellipse cx="51" cy="109" rx="18" ry="12" fill="#17324d"/><ellipse cx="104" cy="109" rx="18" ry="12" fill="#17324d"/><path d="M66 146q18 18 36 0" fill="none" stroke="#b83961" stroke-width="7"/><path d="M0 260q80-55 160 0v120H0z" fill="#ffffff"/></g>
+      <g transform="translate(420 227)"><ellipse cx="78" cy="118" rx="66" ry="74" fill="#d99a70"/><path d="M9 112c-3-102 130-132 143-6-37-37-104-36-143 6z" fill="#e0d7c9"/><path d="M20 62c37-36 91-39 123-1" fill="none"/><ellipse cx="51" cy="109" rx="18" ry="12" fill="#17324d"/><ellipse cx="104" cy="109" rx="18" ry="12" fill="#17324d"/><path d="M66 146q18 18 36 0" fill="none" stroke="#b83961" stroke-width="7"/><path d="M0 260q80-55 160 0v120H0z" fill="#263c4a"/></g>
+    </g>
+    <circle cx="386" cy="481" r="24" fill="#d7ef31" stroke="#17324d" stroke-width="5"/><g fill="#17324d"><circle cx="378" cy="472" r="3"/><circle cx="391" cy="473" r="3"/><circle cx="379" cy="487" r="3"/><circle cx="394" cy="489" r="3"/></g>
+  </g>
+  <circle cx="300" cy="300" r="292" fill="none" stroke="#fff" stroke-width="12"/>
+</svg>
