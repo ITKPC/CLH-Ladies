@@ -113,4 +113,8 @@
     enhanceEditPicker();
   });
   observer.observe(document.body, { childList: true, subtree: true });
+
+  const guard = document.createElement('script');
+  guard.src = 'booking-guard.js';
+  document.body.appendChild(guard);
 })();
