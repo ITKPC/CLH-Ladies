@@ -190,6 +190,7 @@
       await loadScript('shared-data.js');
       await loadScript('court-picker.js');
       await loadScript('booking-guard.js');
+      await loadScript('availability.js');
       window.dispatchEvent(new Event('clh-app-ready'));
     } catch (error) {
       console.error('Club La Huerta app tools could not load', error);
