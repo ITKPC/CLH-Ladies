@@ -56,28 +56,56 @@
     if (!e) return;
 
     const roster = numberedRoster(e);
-    const rosterRows = roster.map(p => `<tr><td>${p.number}</td><td>${esc(p.name)}</td></tr>`).join('');
-    const waitRows = e.waitlist.length ? `<div class="wait-print"><h3>Waitlist</h3>${e.waitlist.map((p,i)=>`<div>${i+1}. ${esc(p)}</div>`).join('')}</div>` : '';
+    const rosterCards = roster.map(p => `<div class="roster-item"><span class="num">${p.number}</span><span>${esc(p.name)}</span></div>`).join('');
+    const waitRows = e.waitlist.length ? `<div class="wait-print"><strong>Waitlist:</strong> ${e.waitlist.map((p,i)=>`${i+1}. ${esc(p)}`).join(' · ')}</div>` : '';
     const hint = e.format === 'Round Robin'
-      ? 'Use player numbers when assigning partners, opponents and court rotations.'
+      ? 'Use player numbers for partners, opponents and court rotations.'
       : e.format === 'Ladder'
-      ? 'Use player numbers when assigning starting courts and ladder positions.'
+      ? 'Use player numbers for starting courts and ladder positions.'
       : e.format === 'League'
-      ? 'Use player numbers when recording teams, matchups and scores.'
+      ? 'Use player numbers for teams, matchups and scores.'
       : 'Use player numbers for court assignments or casual rotations.';
 
     const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(e.name)} - Play Sheet</title><style>
-      *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17324d;margin:32px;line-height:1.35;background:#fff}h1{margin:0 0 6px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}.meta{color:#536a75;margin-bottom:4px}.format{font-weight:700;margin:12px 0;padding:8px 10px;background:#eef7f8;border-radius:8px;display:inline-block}table{border-collapse:collapse;width:100%;max-width:520px;margin-top:12px}th,td{border-bottom:1px solid #dbe6e9;padding:9px 8px;text-align:left}th:first-child,td:first-child{width:70px;text-align:center;font-weight:700}.instructions{margin-top:22px;padding:12px;border:1px solid #dbe6e9;border-radius:10px}.line{border-bottom:1px solid #999;height:28px;margin-top:8px}.wait-print{margin-top:26px}.print-actions{margin:24px 0}.print-actions button{padding:12px 16px;font-size:16px;border:0;border-radius:8px;background:#087ca1;color:white;font-weight:700}@media print{.print-actions{display:none}body{margin:14mm}}@media(max-width:560px){body{margin:18px}h1{font-size:22px}}
+      @page{size:portrait;margin:8mm}
+      *{box-sizing:border-box}
+      body{font-family:Arial,sans-serif;color:#17324d;margin:18px;line-height:1.2;background:#fff;font-size:12px}
+      h1{margin:0 0 3px;font-size:22px;line-height:1.05}
+      h2{margin:12px 0 6px;font-size:15px}
+      .meta{color:#536a75;margin:1px 0}
+      .format{font-weight:700;margin:6px 0;padding:5px 7px;background:#eef7f8;border-radius:6px;display:inline-block}
+      .note{margin:5px 0}
+      .roster-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 10px;margin-top:5px}
+      .roster-item{display:grid;grid-template-columns:24px 1fr;gap:5px;align-items:center;border-bottom:1px solid #dbe6e9;padding:3px 2px;min-width:0}
+      .roster-item .num{font-weight:800;text-align:center}
+      .roster-item span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .wait-print{margin-top:8px;font-size:10.5px;line-height:1.3}
+      .instructions{margin-top:10px;padding:7px 9px;border:1px solid #dbe6e9;border-radius:7px;font-size:10.5px}
+      .instructions p{margin:3px 0 5px}
+      .line{border-bottom:1px solid #999;height:17px;margin-top:3px}
+      .print-actions{margin:14px 0}.print-actions button{padding:10px 14px;font-size:14px;border:0;border-radius:8px;background:#087ca1;color:white;font-weight:700}
+      @media print{
+        .print-actions{display:none}
+        html,body{width:100%;height:auto}
+        body{margin:0;font-size:10.5px}
+        h1{font-size:19px}
+        h2{font-size:13px;margin:9px 0 4px}
+        .format{margin:4px 0;padding:4px 6px}
+        .roster-grid{gap:2px 8px;margin-top:3px}
+        .roster-item{padding:2px 1px}
+        .instructions{margin-top:7px;padding:5px 7px}
+        .line{height:14px}
+      }
+      @media(max-width:560px){body{margin:14px}.roster-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     </style></head><body>
       <h1>${esc(e.name)}</h1>
-      <div class="meta">${fmtDate(e.date,{weekday:'long',month:'long',day:'numeric'})}</div>
-      <div class="meta">${fmtTime(e.start)}–${fmtTime(e.end)} · Courts ${esc(e.courts)}</div>
-      <div class="format">${esc(formatLabel(e.format))} · ${esc(e.level)}</div>
-      ${e.note ? `<p>${esc(e.note)}</p>` : ''}
+      <div class="meta">${fmtDate(e.date,{weekday:'long',month:'long',day:'numeric'})} · ${fmtTime(e.start)}–${fmtTime(e.end)} · Courts ${esc(e.courts)}</div>
+      <div class="format">${esc(formatLabel(e.format))} · ${esc(e.level)} · ${e.players.length} players</div>
+      ${e.note ? `<div class="note">${esc(e.note)}</div>` : ''}
       <h2>Player Numbers</h2>
-      <table><thead><tr><th>#</th><th>Player</th></tr></thead><tbody>${rosterRows || '<tr><td colspan="2">No confirmed players</td></tr>'}</tbody></table>
+      <div class="roster-grid">${rosterCards || '<div>No confirmed players</div>'}</div>
       ${waitRows}
-      <div class="instructions"><strong>Play setup</strong><p>${hint}</p><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div>
+      <div class="instructions"><strong>Play setup</strong><p>${hint}</p><div class="line"></div><div class="line"></div></div>
       <div class="print-actions"><button type="button" onclick="window.print()">Print / Save as PDF</button></div>
     </body></html>`;
 
