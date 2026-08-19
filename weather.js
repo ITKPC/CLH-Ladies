@@ -1,6 +1,5 @@
-/* Club La Huerta weather: client-side only, powered by Open-Meteo. */
+/* Club La Huerta weather + app bootstrap. */
 (() => {
-  // Coordinates are centered on the Club La Huerta / San Jose del Cabo area.
   const CLUB = { lat: 23.07, lon: -109.69 };
   const API = `https://api.open-meteo.com/v1/forecast?latitude=${CLUB.lat}&longitude=${CLUB.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America%2FMazatlan&forecast_days=10`;
 
@@ -109,10 +108,7 @@
     });
   }
 
-  function decorate() {
-    decorateEvents();
-    decorateCalendar();
-  }
+  function decorate() { decorateEvents(); decorateCalendar(); }
 
   async function loadWeather() {
     try {
@@ -133,11 +129,13 @@
   loadWeather();
 })();
 
-// Load optional app enhancements after the original app has initialized.
+/* Load the shared app pieces in a deterministic order. */
 (() => {
   const loadScript = src => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[data-clh-src="${src}"]`)) return resolve();
     const script = document.createElement('script');
     script.src = src;
+    script.dataset.clhSrc = src;
     script.onload = resolve;
     script.onerror = reject;
     document.body.appendChild(script);
@@ -149,16 +147,13 @@
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
       await loadScript('supabase-client.js');
       await loadScript('auth-gate.js');
-    } catch (error) {
-      console.error('Group access could not load', error);
-    }
-
-    try {
       await loadScript('play-sheet.js');
       await loadScript('shared-data.js');
       await loadScript('court-picker.js');
+      await loadScript('booking-guard.js');
+      window.dispatchEvent(new Event('clh-app-ready'));
     } catch (error) {
-      console.error('Shared play tools could not load', error);
+      console.error('Club La Huerta app tools could not load', error);
     }
   })();
 })();
