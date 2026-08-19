@@ -145,6 +145,7 @@
 
   (async () => {
     try {
+      await loadScript('friendly-copy.js');
       await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
       await loadScript('supabase-client.js');
       await loadScript('auth-gate.js');
