@@ -16,7 +16,7 @@ The organizer chooses the format for each session.
 
 ## Core Principle: No Persistent Data Storage
 
-The app does not maintain long-term player data.
+The app does not maintain long-term player data and does not require a database or backend data store.
 
 Information is entered only as needed for the current session, such as:
 
@@ -30,7 +30,25 @@ The app uses this information to organize play and calculate results for the act
 
 No permanent player profiles, attendance histories, season histories, or long-term standings are required.
 
+Active-session information should remain on the user's device only. Temporary browser memory or `sessionStorage` may be used so an active session can survive normal navigation or an accidental page refresh. Session information should not be sent to or permanently stored on a server.
+
 If users want to keep results, they can manually copy, download, export, or otherwise save them outside the app.
+
+## Deployment
+
+The application will be deployed through Netlify from the GitHub repository:
+
+`ITKPC/CLH-Ladies`
+
+The intended architecture is a static client-side web application:
+
+- Netlify hosts and deploys the site.
+- GitHub `main` is the deployment source.
+- No application database is required.
+- No authentication is required for the initial version.
+- No server-side player or match data is stored.
+- Active-session state is handled in the browser only.
+- PWA and offline capability may be added later.
 
 ## Basic Session Flow
 
@@ -160,9 +178,9 @@ The app is designed around temporary session information rather than a permanent
 
 The intended principle is:
 
-> Enter what is needed to organize today's play, use it for the session, and do not depend on storing it permanently.
+> Enter what is needed to organize today's play, use it for the session, and do not store it permanently on a server.
 
-Technical implementation should still clearly define how temporary session information is handled in the browser or device and when it is cleared.
+Temporary client-side state should be cleared when the session is deliberately ended. The implementation should make the lifecycle of browser-held session information explicit.
 
 ## Possible Future Features
 
