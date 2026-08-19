@@ -133,10 +133,29 @@
   loadWeather();
 })();
 
-// Load the session-detail/play-sheet enhancement after the base app is ready.
+// Load optional app enhancements after the original app has initialized.
 (() => {
-  const script = document.createElement('script');
-  script.src = 'play-sheet.js';
-  script.defer = true;
-  document.body.appendChild(script);
+  const loadScript = src => new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+
+  (async () => {
+    try {
+      await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+      await loadScript('supabase-client.js');
+      await loadScript('auth-gate.js');
+    } catch (error) {
+      console.error('Group access could not load', error);
+    }
+
+    try {
+      await loadScript('play-sheet.js');
+    } catch (error) {
+      console.error('Play sheet could not load', error);
+    }
+  })();
 })();
