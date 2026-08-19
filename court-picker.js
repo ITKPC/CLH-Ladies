@@ -36,15 +36,10 @@
       btn.className = 'court-choice';
       btn.textContent = n;
       btn.setAttribute('aria-label', `Court ${n}`);
-      btn.setAttribute('aria-pressed', selectedSet.has(n) ? 'true' : 'false');
-      btn.classList.toggle('active', selectedSet.has(n));
       btn.addEventListener('click', () => {
         if (selectedSet.has(n)) selectedSet.delete(n); else selectedSet.add(n);
-        btn.classList.toggle('active', selectedSet.has(n));
-        btn.setAttribute('aria-pressed', selectedSet.has(n) ? 'true' : 'false');
-        input.value = formatCourts(selectedSet);
+        renderSelection();
         input.dispatchEvent(new Event('change', { bubbles: true }));
-        updateSummary();
       });
       buttons.push(btn);
       wrap.appendChild(btn);
@@ -55,13 +50,29 @@
     wrap.appendChild(summary);
     input.after(wrap);
 
-    function updateSummary() {
+    function renderSelection() {
+      buttons.forEach((btn, index) => {
+        const active = selectedSet.has(index + 1);
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
       const list = [...selectedSet].sort((a,b)=>a-b);
       summary.textContent = list.length ? `${list.length} court${list.length === 1 ? '' : 's'} selected: ${list.join(', ')}` : 'Select at least one court';
       summary.classList.toggle('empty', !list.length);
       input.value = formatCourts(selectedSet);
     }
-    updateSummary();
+
+    input.addEventListener('change', () => {
+      const fromInput = parseCourts(input.value);
+      const current = formatCourts(selectedSet);
+      const next = fromInput.join(', ');
+      if (next === current) return;
+      selectedSet.clear();
+      fromInput.forEach(n => selectedSet.add(n));
+      renderSelection();
+    });
+
+    renderSelection();
   }
 
   function enhanceCreatePicker() {
