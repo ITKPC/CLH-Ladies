@@ -48,4 +48,11 @@
   updateUi();
   const observer = new MutationObserver(() => requestAnimationFrame(updateUi));
   observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
+  if (!document.querySelector('script[data-clh-finish-fix]')) {
+    const script = document.createElement('script');
+    script.src = 'matchmaker-finish-fix.js';
+    script.dataset.clhFinishFix = '1';
+    document.body.appendChild(script);
+  }
 })();
