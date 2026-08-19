@@ -132,3 +132,11 @@
   addStyles();
   loadWeather();
 })();
+
+// Load the session-detail/play-sheet enhancement after the base app is ready.
+(() => {
+  const script = document.createElement('script');
+  script.src = 'play-sheet.js';
+  script.defer = true;
+  document.body.appendChild(script);
+})();
