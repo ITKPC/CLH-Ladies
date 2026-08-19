@@ -187,6 +187,7 @@
       await loadScript('auth-gate.js');
       await loadScript('navigation-fix.js');
       await loadScript('play-sheet.js');
+      await loadScript('session-card-fix.js');
       await loadScript('shared-data.js');
       await loadScript('upcoming-all.js');
       await loadScript('court-picker.js');
