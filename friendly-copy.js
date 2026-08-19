@@ -1,6 +1,15 @@
-/* Friendly, current copy for the shared Supabase app. */
+/* Friendly, current copy and branding for the shared Supabase app. */
 (() => {
-  const updateCopy = () => {
+  const LOGO = 'assets/Mexican_Pickleball_Logo.png';
+
+  const updateUi = () => {
+    document.querySelectorAll('.brand img, .access-mark').forEach(img => {
+      if (img.getAttribute('src') !== LOGO) {
+        img.setAttribute('src', LOGO);
+        img.setAttribute('alt', 'Mexican pickleball');
+      }
+    });
+
     document.querySelectorAll('.note').forEach(note => {
       if (/Prototype: sessions and RSVPs/i.test(note.textContent || '')) note.remove();
     });
@@ -14,16 +23,13 @@
     }
 
     document.querySelectorAll('.empty').forEach(box => {
-      const text = (box.textContent || '').trim();
-      if (/Nothing scheduled\. Tap \+ Play to start something\./i.test(text)) {
-        box.textContent = 'No games here yet. Tap + Play and get one going!';
-      } else if (/Nothing scheduled/i.test(text)) {
+      if (/Nothing scheduled/i.test((box.textContent || '').trim())) {
         box.textContent = 'No games here yet. Tap + Play and get one going!';
       }
     });
   };
 
-  updateCopy();
-  const observer = new MutationObserver(() => requestAnimationFrame(updateCopy));
+  updateUi();
+  const observer = new MutationObserver(() => requestAnimationFrame(updateUi));
   observer.observe(document.body, { childList: true, subtree: true });
 })();
