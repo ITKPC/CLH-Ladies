@@ -154,8 +154,9 @@
 
     try {
       await loadScript('play-sheet.js');
+      await loadScript('shared-data.js');
     } catch (error) {
-      console.error('Play sheet could not load', error);
+      console.error('Shared play tools could not load', error);
     }
   })();
 })();
