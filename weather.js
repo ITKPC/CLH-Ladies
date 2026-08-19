@@ -155,6 +155,7 @@
     try {
       await loadScript('play-sheet.js');
       await loadScript('shared-data.js');
+      await loadScript('court-picker.js');
     } catch (error) {
       console.error('Shared play tools could not load', error);
     }
