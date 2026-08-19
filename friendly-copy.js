@@ -4,6 +4,20 @@
   let matchCreatePending = false;
   let availabilityRefreshTimer = null;
 
+  function purgePrototypeSessions() {
+    try { localStorage.removeItem('clh-ladies-v3'); } catch {}
+    if (window.state?.events && Array.isArray(window.state.events)) {
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const cleaned = window.state.events.filter(event => uuid.test(String(event?.id || '')));
+      if (cleaned.length !== window.state.events.length) {
+        window.state.events = cleaned;
+        try { if (typeof renderAll === 'function') renderAll(); } catch (error) { console.warn('Could not clear old prototype sessions', error); }
+      }
+    }
+  }
+
+  purgePrototypeSessions();
+
   const updateUi = () => {
     document.querySelectorAll('.brand img, .access-mark').forEach(img => {
       if (img.getAttribute('src') !== LOGO) {
