@@ -26,6 +26,8 @@
   };
 
   let forecast = new Map();
+  let observer = null;
+  let decorateQueued = false;
 
   function addStyles() {
     const style = document.createElement('style');
@@ -78,14 +80,22 @@
 
   function decorateEvents() {
     document.querySelectorAll('.event').forEach(card => {
-      card.querySelector('.weather-inline')?.remove();
       const f = forecast.get(dateFromCard(card));
-      if (!f) return;
+      const existing = card.querySelector('.weather-inline');
+      if (!f) {
+        existing?.remove();
+        return;
+      }
       const meta = card.querySelector('.meta');
       if (!meta) return;
+      const text = `${wxIcon(f.code)} ${f.hi}° / ${f.lo}°${f.rain >= 30 ? ` · ${f.rain}% rain` : ''}`;
+      if (existing) {
+        if (existing.textContent !== text) existing.textContent = text;
+        return;
+      }
       const row = document.createElement('div');
       row.className = 'weather-inline';
-      row.innerHTML = `<span aria-hidden="true">${wxIcon(f.code)}</span><span>${f.hi}° / ${f.lo}°${f.rain >= 30 ? ` · ${f.rain}% rain` : ''}</span>`;
+      row.textContent = text;
       meta.after(row);
     });
   }
@@ -94,21 +104,50 @@
     const label = document.getElementById('monthLabel')?.textContent;
     if (!label) return;
     document.querySelectorAll('.day').forEach(day => {
-      day.querySelector('.daywx')?.remove();
+      const existing = day.querySelector('.daywx');
       const n = Number(day.querySelector('.num')?.textContent);
-      if (!n) return;
+      if (!n) {
+        existing?.remove();
+        return;
+      }
       const d = new Date(`${label} ${n} 12:00:00`);
       if (Number.isNaN(d.getTime())) return;
       const f = forecast.get(d.toISOString().slice(0,10));
-      if (!f) return;
+      if (!f) {
+        existing?.remove();
+        return;
+      }
+      const text = `${wxIcon(f.code)} ${f.hi}°`;
+      if (existing) {
+        if (existing.textContent !== text) existing.textContent = text;
+        return;
+      }
       const span = document.createElement('span');
       span.className = 'daywx';
-      span.textContent = `${wxIcon(f.code)} ${f.hi}°`;
+      span.textContent = text;
       day.appendChild(span);
     });
   }
 
-  function decorate() { decorateEvents(); decorateCalendar(); }
+  function decorateNow() {
+    if (observer) observer.disconnect();
+    try {
+      decorateEvents();
+      decorateCalendar();
+    } finally {
+      const root = document.querySelector('.app') || document.body;
+      if (observer && root) observer.observe(root, { childList: true, subtree: true });
+    }
+  }
+
+  function queueDecorate() {
+    if (decorateQueued) return;
+    decorateQueued = true;
+    requestAnimationFrame(() => {
+      decorateQueued = false;
+      decorateNow();
+    });
+  }
 
   async function loadWeather() {
     try {
@@ -117,9 +156,8 @@
       const data = await response.json();
       buildForecast(data);
       renderCurrent(data);
-      decorate();
-      const observer = new MutationObserver(() => requestAnimationFrame(decorate));
-      observer.observe(document.querySelector('.app') || document.body, { childList: true, subtree: true });
+      observer = new MutationObserver(queueDecorate);
+      decorateNow();
     } catch (error) {
       console.warn('Club La Huerta weather unavailable', error);
     }
