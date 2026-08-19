@@ -188,6 +188,7 @@
       await loadScript('navigation-fix.js');
       await loadScript('play-sheet.js');
       await loadScript('shared-data.js');
+      await loadScript('upcoming-all.js');
       await loadScript('court-picker.js');
       await loadScript('booking-guard.js');
       await loadScript('availability.js');
