@@ -8,15 +8,16 @@
     const style = document.createElement('style');
     style.textContent = `
       body.clh-locked{overflow:hidden}
-      body.clh-locked .app{filter:blur(3px);pointer-events:none;user-select:none}
-      .access-gate{position:fixed;inset:0;z-index:1000;background:linear-gradient(145deg,#087ca1,#12a5c3);display:grid;place-items:center;padding:20px}
-      .access-card{width:min(420px,100%);background:white;border-radius:22px;padding:24px;box-shadow:0 18px 55px rgba(0,0,0,.24);color:#17324d}
-      .access-mark{width:74px;height:74px;border-radius:50%;display:block;margin:0 auto 12px;border:4px solid #eef7f8}
+      body.clh-locked .app{opacity:.18;pointer-events:none;user-select:none}
+      .access-gate{position:fixed;inset:0;z-index:1000;background:linear-gradient(145deg,#087ca1,#12a5c3);display:grid;place-items:center;padding:20px;pointer-events:auto;touch-action:auto;overflow:auto;-webkit-overflow-scrolling:touch}
+      .access-card{width:min(420px,100%);background:white;border-radius:22px;padding:24px;box-shadow:0 18px 55px rgba(0,0,0,.24);color:#17324d;pointer-events:auto}
+      .access-mark{width:74px;height:74px;border-radius:50%;display:block;margin:0 auto 12px;border:4px solid #eef7f8;object-fit:contain;background:white}
       .access-card h2{text-align:center;margin:0 0 5px;font-size:1.5rem}
       .access-card .access-sub{text-align:center;color:#6a7d88;font-size:.88rem;margin:0 0 18px;line-height:1.45}
       .access-card label{display:block;font-size:.82rem;font-weight:850;margin:12px 0 5px}
-      .access-card input{width:100%;padding:12px;border:1px solid #c8d7db;border-radius:11px;font:inherit}
-      .access-card button{width:100%;margin-top:16px;border:0;border-radius:11px;padding:12px;background:#087ca1;color:white;font-weight:900;font:inherit;cursor:pointer}
+      .access-card input{width:100%;padding:12px;border:1px solid #c8d7db;border-radius:11px;font:inherit;font-size:16px;background:#fff;color:#17324d;pointer-events:auto;touch-action:manipulation;user-select:text;-webkit-user-select:text;-webkit-appearance:none;appearance:none}
+      .access-card input:focus{outline:3px solid rgba(8,124,161,.18);border-color:#087ca1}
+      .access-card button{width:100%;margin-top:16px;border:0;border-radius:11px;padding:12px;background:#087ca1;color:white;font-weight:900;font:inherit;font-size:16px;cursor:pointer;touch-action:manipulation}
       .access-card button:disabled{opacity:.55;cursor:wait}
       .access-error{min-height:20px;margin-top:10px;color:#9b3030;font-size:.82rem;text-align:center;font-weight:700}
     `;
@@ -26,11 +27,11 @@
   function gateHtml() {
     return `<div class="access-gate" id="accessGate">
       <div class="access-card">
-        <img class="access-mark" src="assets/ladies-pickleball.svg" alt="">
+        <img class="access-mark" src="assets/Mexican_Pickleball_Logo.png" alt="">
         <h2>Ladies Pickleball</h2>
         <p class="access-sub">Enter the group passkey once on this device.</p>
         <label for="accessName">Your name</label>
-        <input id="accessName" autocomplete="name" placeholder="e.g. Nancy M.">
+        <input id="accessName" autocomplete="name" autocapitalize="words" inputmode="text" placeholder="e.g. Nancy M.">
         <label for="accessPasskey">Group passkey</label>
         <input id="accessPasskey" type="password" autocomplete="current-password" placeholder="Group passkey">
         <button id="accessEnter" type="button">Enter</button>
@@ -117,7 +118,8 @@
     if (document.getElementById('accessGate')) return;
     document.body.insertAdjacentHTML('beforeend', gateHtml());
     const savedName = localStorage.getItem(PROFILE);
-    if (savedName) document.getElementById('accessName').value = savedName;
+    const nameInput = document.getElementById('accessName');
+    if (savedName) nameInput.value = savedName;
 
     const submit = async () => {
       const button = document.getElementById('accessEnter');
@@ -126,6 +128,7 @@
       const passkey = document.getElementById('accessPasskey').value;
       if (!name) {
         errorBox.textContent = 'Enter your name.';
+        nameInput.focus();
         return;
       }
       errorBox.textContent = '';
@@ -145,6 +148,8 @@
     document.getElementById('accessPasskey').addEventListener('keydown', e => {
       if (e.key === 'Enter') submit();
     });
+
+    setTimeout(() => nameInput?.focus({ preventScroll: true }), 80);
   }
 
   async function start() {
