@@ -2,6 +2,7 @@
 (() => {
   const LOGO = 'assets/Mexican_Pickleball_Logo.png';
   let matchCreatePending = false;
+  let availabilityRefreshTimer = null;
 
   const updateUi = () => {
     document.querySelectorAll('.brand img, .access-mark').forEach(img => {
@@ -41,8 +42,19 @@
     }
   };
 
+  function refreshMatchmakerSoon() {
+    clearTimeout(availabilityRefreshTimer);
+    availabilityRefreshTimer = setTimeout(() => {
+      const gameTab = document.querySelector('.nav [data-view="gameView"]');
+      if (gameTab) gameTab.click();
+    }, 350);
+  }
+
   document.addEventListener('click', event => {
     if (event.target.closest('[data-make-game]')) matchCreatePending = true;
+    if (event.target.closest('[data-routine-day], [data-skip-date], [data-av-date]')) {
+      refreshMatchmakerSoon();
+    }
   }, true);
 
   updateUi();
