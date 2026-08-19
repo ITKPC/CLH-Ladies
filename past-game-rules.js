@@ -45,19 +45,6 @@
     window.eventCard = wrapped;
   }
 
-  function installUpcomingRules() {
-    window.renderUpcoming = function() {
-      const root = document.getElementById('upcoming');
-      if (!root || !window.state) return;
-      const games = (state.events || [])
-        .filter(e => !isPast(e.date))
-        .sort((a, b) => `${a.date}T${a.start}`.localeCompare(`${b.date}T${b.start}`));
-      root.innerHTML = games.length
-        ? games.map(e => eventCard(e)).join('')
-        : '<div class="empty">No upcoming games yet.</div>';
-    };
-  }
-
   function installDetailRules() {
     if (typeof window.showRoster !== 'function' || window.showRoster.__clhPastRules) return;
     const original = window.showRoster;
@@ -128,14 +115,15 @@
 
   function install() {
     installCardRules();
-    installUpcomingRules();
     installDetailRules();
     guardAction('join', 'That game has already happened.');
     guardAction('giveUp', 'That game has already happened.');
     guardAction('editSession', 'Completed games can no longer be edited.');
     guardAction('cancelSession', 'Completed games can no longer be cancelled.');
     applyMatchmakerRules();
-    if (document.getElementById('upcomingView')?.classList.contains('active')) renderUpcoming();
+    if (document.getElementById('upcomingView')?.classList.contains('active') && typeof window.renderUpcoming === 'function') {
+      window.renderUpcoming();
+    }
   }
 
   const style = document.createElement('style');
