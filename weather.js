@@ -193,7 +193,6 @@
       await loadScript('court-picker.js');
       await loadScript('booking-guard.js');
       await loadScript('availability.js');
-      await loadScript('availability-simple-week.js');
       await loadScript('player-booking-safety.js');
       await loadScript('past-game-rules.js');
       window.dispatchEvent(new Event('clh-app-ready'));
