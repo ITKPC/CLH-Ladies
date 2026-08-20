@@ -6,6 +6,7 @@
   };
   let busy = false;
   let refreshTimer = null;
+  let syncing = false;
 
   const client = () => window.clhSupabase || window.createClhSupabaseClient?.();
   const user = () => window.clhAuthUser;
@@ -39,6 +40,7 @@
     refreshTimer = setTimeout(() => {
       const tab = document.querySelector('.nav [data-view="gameView"]');
       if (tab) tab.click();
+      setTimeout(syncButtons, 180);
     }, 80);
   }
 
@@ -79,51 +81,58 @@
   }
 
   async function syncButtons() {
+    if (syncing) return;
     const root = document.getElementById('availabilityRoot');
     if (!root || !client() || !user()) return;
-
-    root.querySelectorAll('.week-summary,.week-panel,.demo-note').forEach(el => el.remove());
-
-    const card = root.querySelector('.game-card');
-    if (card) {
-      const sub = card.querySelector('.game-sub');
-      if (sub) sub.textContent = 'Pick the mornings or afternoons you can play this week. Nothing carries into future weeks.';
-      if (!card.querySelector('.simple-week-note')) {
-        const note = document.createElement('div');
-        note.className = 'simple-week-note';
-        note.textContent = 'This week only';
-        const week = card.querySelector('.usual-week');
-        if (week) card.insertBefore(note, week);
+    syncing = true;
+    try {
+      const card = root.querySelector('.game-card');
+      if (card) {
+        const sub = card.querySelector('.game-sub');
+        if (sub && sub.textContent !== 'Pick the mornings or afternoons you can play this week. Nothing carries into future weeks.') {
+          sub.textContent = 'Pick the mornings or afternoons you can play this week. Nothing carries into future weeks.';
+        }
+        if (!card.querySelector('.simple-week-note')) {
+          const note = document.createElement('div');
+          note.className = 'simple-week-note';
+          note.textContent = 'This week only';
+          const week = card.querySelector('.usual-week');
+          if (week) card.insertBefore(note, week);
+        }
       }
+
+      const buttons = [...root.querySelectorAll('.routine-chip[data-routine-day][data-routine-period]')];
+      if (!buttons.length) return;
+
+      const dates = [...new Set(buttons.map(b => dateForWeekday(b.dataset.routineDay)))];
+      const {data, error} = await client()
+        .from('play_availability')
+        .select('play_date,start_time')
+        .eq('user_id', user().id)
+        .in('play_date', dates);
+      if (error) return console.warn('Could not sync current-week availability', error);
+
+      buttons.forEach(button => {
+        const date = dateForWeekday(button.dataset.routineDay);
+        const period = button.dataset.routinePeriod;
+        const active = (data || []).some(row => row.play_date === date && periodFor(row.start_time) === period);
+        button.classList.toggle('active', active);
+        const wanted = `${PERIODS[period].label}${active ? ' ✓' : ''}`;
+        if (button.textContent !== wanted) button.textContent = wanted;
+        const past = date < clubToday();
+        button.disabled = past;
+        button.title = past ? 'This day has already passed.' : '';
+      });
+
+      root.querySelectorAll('.match-head strong').forEach(label => {
+        const wanted = label.textContent
+          .replace(/\b8[–-]10\b|\b9[–-]11\b|\b10[–-]12\b/g, 'Morning')
+          .replace(/\b1[–-]3\b|\b2[–-]4\b|\b3[–-]5\b/g, 'Afternoon');
+        if (label.textContent !== wanted) label.textContent = wanted;
+      });
+    } finally {
+      syncing = false;
     }
-
-    const buttons = [...root.querySelectorAll('.routine-chip[data-routine-day][data-routine-period]')];
-    if (!buttons.length) return;
-
-    const dates = [...new Set(buttons.map(b => dateForWeekday(b.dataset.routineDay)))];
-    const {data, error} = await client()
-      .from('play_availability')
-      .select('play_date,start_time')
-      .eq('user_id', user().id)
-      .in('play_date', dates);
-    if (error) return console.warn('Could not sync current-week availability', error);
-
-    buttons.forEach(button => {
-      const date = dateForWeekday(button.dataset.routineDay);
-      const period = button.dataset.routinePeriod;
-      const active = (data || []).some(row => row.play_date === date && periodFor(row.start_time) === period);
-      button.classList.toggle('active', active);
-      button.textContent = `${PERIODS[period].label}${active ? ' ✓' : ''}`;
-      const past = date < clubToday();
-      button.disabled = past;
-      button.title = past ? 'This day has already passed.' : '';
-    });
-
-    root.querySelectorAll('.match-head strong').forEach(label => {
-      label.textContent = label.textContent
-        .replace(/\b8[–-]10\b|\b9[–-]11\b|\b10[–-]12\b/g, 'Morning')
-        .replace(/\b1[–-]3\b|\b2[–-]4\b|\b3[–-]5\b/g, 'Afternoon');
-    });
   }
 
   function addStyles() {
@@ -139,16 +148,17 @@
 
   document.addEventListener('click', event => {
     const button = event.target.closest('.routine-chip[data-routine-day][data-routine-period]');
-    if (!button) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    toggleCurrentWeek(button);
+    if (button) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      toggleCurrentWeek(button);
+      return;
+    }
+    if (event.target.closest('.nav [data-view="gameView"]')) setTimeout(syncButtons, 180);
   }, true);
 
   addStyles();
-  const observer = new MutationObserver(() => requestAnimationFrame(syncButtons));
-  observer.observe(document.querySelector('.app') || document.body, {childList:true, subtree:true});
-  window.addEventListener('clh-auth-ready', () => setTimeout(syncButtons, 0));
-  window.addEventListener('clh-app-ready', () => setTimeout(syncButtons, 0));
-  setTimeout(syncButtons, 150);
+  window.addEventListener('clh-auth-ready', () => setTimeout(syncButtons, 180));
+  window.addEventListener('clh-app-ready', () => setTimeout(syncButtons, 180));
+  setTimeout(syncButtons, 250);
 })();
